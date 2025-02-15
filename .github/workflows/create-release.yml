@@ -1,0 +1,37 @@
+name: Create ONNX Runtime release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  create-onnx-runtime-artifact:
+    uses: ./.github/workflows/create-onnx-runtime-artifact.yml
+  
+  release:
+    needs: create-onnx-runtime-artifact
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Load config env
+        run: cat config.env >> $GITHUB_ENV
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.create-onnx-runtime-artifact.outputs.artifact-name }}
+      
+      - name: Unzip artifact content
+        run: unzip -o "${{ needs.create-onnx-runtime-artifact.outputs.artifact-name }}.zip" -d extracted/
+      
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: extracted/**
+          draft: true
+          body: |
+            ONNX Runtime version: ${{ env.ONNXRUNTIME_VERSION }}
+            QNN SDK version: ${{ env.QNN_SDK_VERSION }}
+            Minimum Android SDK version: ${{ env.ANDROID_MIN_SDK_VERSION }}
+  
