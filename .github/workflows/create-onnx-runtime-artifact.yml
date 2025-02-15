@@ -1,15 +1,11 @@
-name: Build ONNX Runtime
+name: Create ONNX Runtime artifact
 
-on:
-  push:
-    paths:
-      - '.github/**' # Skip unncessary builds
-    branches:
-      - master  # This triggers the workflow on push to the master branch
-  workflow_dispatch:  # This allows the workflow to be triggered manually
-  pull_request: # Trigger when pull request is opened targeting master
-    branches:
-      - master
+on: 
+  workflow_call:
+    outputs:
+      artifact-name: 
+        description: 'Generated artifact''s name'
+        value: ${{ jobs.build.outputs.artifact-name }}
 
 env:
   ANDROID_SDK_VERSION: "35"
@@ -22,6 +18,8 @@ jobs:
 
   build:
     runs-on: ubuntu-22.04
+    outputs:
+      artifact-name: ${{ steps.set-outputs.outputs.artifact-name }}
 
     steps:
       - name: Checkout repository
@@ -93,8 +91,12 @@ jobs:
         run: |
           zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
 
-      - name: Create artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.REPO_NAME }}_${{ github.sha }}
           path: onnxruntime-android-qnn.zip
+
+      - name: Set outputs
+        id: set-outputs
+        run: echo "artifact-name=$REPO_NAME_$GITHUB_SHA" >> $GITHUB_OUTPUT
