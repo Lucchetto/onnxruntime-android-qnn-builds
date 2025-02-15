@@ -55,11 +55,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y patch ninja-build
-      
+
+      - name: Get repository name
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          restore-keys: ccache-
+          key: ${{ env.REPO_NAME }}_android_arm64-v8a
           max-size: 1024M
 
       - name: Clone ONNX Runtime at version ${{ env.ONNXRUNTIME_VERSION }}
@@ -88,10 +92,6 @@ jobs:
       - name: Zip the files
         run: |
           zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
-      
-      - name: Get repository name
-        run: |
-          echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
 
       - name: Create artifact
         uses: actions/upload-artifact@v4
