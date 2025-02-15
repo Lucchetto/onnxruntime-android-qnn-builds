@@ -95,4 +95,4 @@ jobs:
 
       - name: Set outputs
         id: set-outputs
-        run: echo "artifact-name=$REPO_NAME_$GITHUB_SHA" >> $GITHUB_OUTPUT
+        run: echo "artifact-name=${REPO_NAME}_${GITHUB_SHA}" >> $GITHUB_OUTPUT
