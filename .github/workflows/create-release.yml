@@ -24,14 +24,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.create-onnx-runtime-artifact.outputs.artifact-name }}
-      
-      - name: Unzip artifact content
-        run: unzip -o "${{ needs.create-onnx-runtime-artifact.outputs.artifact-name }}.zip" -d extracted/
+          path: artifact-content
       
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: extracted/**
+          files: artifact-content/**
           draft: true
           body: |
             ONNX Runtime version: ${{ env.ONNXRUNTIME_VERSION }}
