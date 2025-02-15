@@ -4,15 +4,24 @@ on:
   push:
     paths:
       - '.github/**' # Skip unncessary builds
+      - 'config.env'
     branches:
       - master  # This triggers the workflow on push to the master branch
   workflow_dispatch:  # This allows the workflow to be triggered manually
   pull_request: # Trigger when pull request is opened targeting master
     paths:
       - '.github/**' # Skip unncessary builds
+      - 'config.env'
     branches:
       - master
 
 jobs:
+
+  check-changes:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
   create-onnx-runtime-artifact:
     uses: ./.github/workflows/create-onnx-runtime-artifact.yml
