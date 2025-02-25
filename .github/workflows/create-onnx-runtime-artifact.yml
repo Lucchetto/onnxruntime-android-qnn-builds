@@ -74,13 +74,7 @@ jobs:
         env:
           CCACHE_COMPILERCHECK: content
         run: |
-          python3 tools/ci_build/build.py --build_shared_lib --skip_submodule_sync --android \
-            --config Release --use_qnn --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/ \
-            --android_sdk_path ${{ env.ANDROID_HOME }} \
-            --android_ndk_path ${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }} \
-            --android_abi arm64-v8a --android_api ${{ env.ANDROID_MIN_SDK_VERSION }} \
-            --cmake_generator Ninja --allow_running_as_root --use_cache \
-            --build_dir build/android/arm64-v8a
+          bash ${{ github.workspace }}/build_qnn.sh arm64-v8a --use_qnn --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/
         working-directory: onnxruntime
       
       - name: Zip the files
