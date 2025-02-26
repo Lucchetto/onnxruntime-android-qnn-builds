@@ -74,12 +74,33 @@ jobs:
         env:
           CCACHE_COMPILERCHECK: content
         run: |
-          bash ${{ github.workspace }}/build_qnn.sh arm64-v8a --use_qnn --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/
+          bash ${{ github.workspace }}/build_qnn.sh arm64-v8a qnn --use_qnn --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/
         working-directory: onnxruntime
-      
+
+      - name: Build ONNX Runtime for Android arm64-v8a
+        env:
+          CCACHE_COMPILERCHECK: content
+        run: |
+          bash ${{ github.workspace }}/build_qnn.sh arm64-v8a
+        working-directory: onnxruntime
+
+      - name: Build ONNX Runtime for Android armeabi-v7a
+        env:
+          CCACHE_COMPILERCHECK: content
+        run: |
+          bash ${{ github.workspace }}/build_qnn.sh armeabi-v7a
+        working-directory: onnxruntime
+
+      - name: Build ONNX Runtime for Android x86_64
+        env:
+          CCACHE_COMPILERCHECK: content
+        run: |
+          bash ${{ github.workspace }}/build_qnn.sh x86_64
+        working-directory: onnxruntime
+
       - name: Zip the files
         run: |
-          zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
+          zip onnxruntime-android-qnn.zip onnxruntime/build/android/*/Release/libonnxruntime.so
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
