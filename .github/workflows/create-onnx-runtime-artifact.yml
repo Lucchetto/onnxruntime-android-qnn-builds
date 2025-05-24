@@ -66,7 +66,7 @@ jobs:
 
       - name: Download and extract Qualcomm Neural Processing SDK ${{ env.QNN_SDK_VERSION }}
         run: |
-          wget -O qnn_sdk.zip "https://apigwx-aws.qualcomm.com/qsc/public/v1/api/download/software/qualcomm_neural_processing_sdk/v${{ env.QNN_SDK_VERSION }}.zip"
+          wget -O qnn_sdk.zip "https://softwarecenter.qualcomm.com/api/download/software/sdks/Qualcomm_AI_Runtime_Community/All/${{ env.QNN_SDK_VERSION }}/v${{ env.QNN_SDK_VERSION }}.zip"
           unzip qnn_sdk.zip -d $HOME/qnn_sdk
           rm qnn_sdk.zip
 
