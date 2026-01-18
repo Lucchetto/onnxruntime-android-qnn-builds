@@ -64,6 +64,14 @@ jobs:
         run: |
           git clone --branch v${{ env.ONNXRUNTIME_VERSION }} --depth 1 https://github.com/microsoft/onnxruntime.git
 
+      - name: Apply QNN HTP logic flow bugfix
+        working-directory: onnxruntime
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          git fetch origin b282379ac6066e8de9a5a68f1ce5ef1cf566dd04
+          git cherry-pick b282379ac6066e8de9a5a68f1ce5ef1cf566dd04
+
       - name: Download and extract Qualcomm Neural Processing SDK ${{ env.QNN_SDK_VERSION }}
         run: |
           wget -O qnn_sdk.zip "https://softwarecenter.qualcomm.com/api/download/software/sdks/Qualcomm_AI_Runtime_Community/All/${{ env.QNN_SDK_VERSION }}/v${{ env.QNN_SDK_VERSION }}.zip"
