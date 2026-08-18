@@ -7,5 +7,8 @@ This repository provides pre-built binaries of [ONNX Runtime](https://github.com
 
 Learn more about the QNN SDK at https://www.qualcomm.com/developer/software/neural-processing-sdk-for-ai.
 
+# Telemetry
+Telemetry is disabled in these builds. No usage data is collected or sent by the binaries published here.
+
 # Releases
 The current release and past releases of the binaries can be found here: https://github.com/Lucchetto/onnxruntime-android-qnn-builds/releases.

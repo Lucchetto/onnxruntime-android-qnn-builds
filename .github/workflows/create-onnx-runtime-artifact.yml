@@ -83,6 +83,7 @@ jobs:
             --cmake_generator Ninja --allow_running_as_root --use_cache \
             --skip_tests \
             --cmake_extra_defines=onnxruntime_BUILD_UNIT_TESTS=OFF \
+            --no_telemetry \
             --build_dir build/android/arm64-v8a
         working-directory: onnxruntime
       
