@@ -80,7 +80,7 @@ jobs:
         env:
           CCACHE_COMPILERCHECK: content
         run: |
-          python3 tools/ci_build/build.py --build_shared_lib --skip_submodule_sync --android \
+          python3 tools/ci_build/build.py --skip_submodule_sync --android \
             --config Release --parallel --use_qnn static_lib \
             --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/ \
             --android_sdk_path ${{ env.ANDROID_HOME }} \
@@ -92,9 +92,30 @@ jobs:
             --build_dir build/android/arm64-v8a
         working-directory: onnxruntime
       
+      - name: Combine static libraries into a single libonnxruntime.a
+        run: |
+          NDK_BIN="${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          RELEASE_DIR="build/android/arm64-v8a/Release"
+          cd "$RELEASE_DIR"
+          mkdir -p static_libraries/temp
+          # Extract each .a into its own directory to avoid .o filename collisions
+          # (e.g. element_wise_ops.o exists in multiple ORT sub-libraries).
+          for lib in *.a; do
+            name="${lib%.a}"
+            mkdir -p "static_libraries/temp/$name"
+            (cd "static_libraries/temp/$name" && "$NDK_BIN/llvm-ar" x "../../../$lib")
+          done
+          # Relocatable pre-link of all objects into a single object file.
+          # Use a response file to avoid hitting ARG_MAX with thousands of .o files.
+          find static_libraries/temp -name '*.o' > objects.rsp
+          "$NDK_BIN/ld.lld" -r -o prelinked_objects.o @objects.rsp
+          # Archive the pre-linked object into a single static library.
+          "$NDK_BIN/llvm-ar" rcs libonnxruntime.a prelinked_objects.o
+        working-directory: onnxruntime
+
       - name: Zip the files
         run: |
-          zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
+          zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.a onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
