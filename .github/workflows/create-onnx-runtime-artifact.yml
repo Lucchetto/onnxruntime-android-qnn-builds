@@ -81,7 +81,7 @@ jobs:
           CCACHE_COMPILERCHECK: content
         run: |
           python3 tools/ci_build/build.py --build_shared_lib --skip_submodule_sync --android \
-            --config Release --use_qnn static_lib \
+            --config Release --parallel --use_qnn static_lib \
             --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/ \
             --android_sdk_path ${{ env.ANDROID_HOME }} \
             --android_ndk_path ${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }} \
@@ -92,9 +92,41 @@ jobs:
             --build_dir build/android/arm64-v8a
         working-directory: onnxruntime
       
+      - name: Combine static libraries into a single libonnxruntime.a
+        run: |
+          NDK_BIN="${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          RELEASE_DIR="build/android/arm64-v8a/Release"
+          cd "$RELEASE_DIR"
+          # Internal ORT component archives (onnxruntime_session, onnxruntime_optimizer,
+          # onnxruntime_providers, onnxruntime_providers_qnn, ...). Pull EVERY object
+          # via --whole-archive so no member is lost to same-basename collisions.
+          # onnxruntime_optimizer.a contains TWO members named utils.cc.o:
+          #   core/optimizer/utils.cc
+          #   core/optimizer/qdq_transformer/selectors_actions/shared/utils.cc
+          # The latter defines onnxruntime::QDQ::GetAllNodeUnits, which the QNN EP
+          # and provider_bridge_ort.cc call. Extracting with `ar x` flattens both to
+          # the same filename and silently drops one, producing the
+          # "undefined symbol: onnxruntime::QDQ::GetAllNodeUnits" link error.
+          # Passing the archives directly to ld -r (with --whole-archive) preserves
+          # every member's distinct path-qualified name, so nothing is lost.
+          find . -maxdepth 1 -name '*.a' ! -name 'libonnxruntime.a' > internal.rsp
+          # External dependency archives (protobuf, onnx, re2, absl, flatbuffers,
+          # cpuinfo, kleidiai) live under _deps/. Pass them as archives WITHOUT
+          # --whole-archive so the linker pulls only the referenced members
+          # (dead-code pruning) and resolves symbols like
+          # onnx::GraphProto::GraphProto(...) from libonnx_proto.a.
+          # --start-group/--end-group handles circular deps between them.
+          find _deps -name '*.a' > deps.rsp
+          "$NDK_BIN/ld.lld" -r -o prelinked_objects.o \
+            --whole-archive @internal.rsp --no-whole-archive \
+            --start-group @deps.rsp --end-group
+          # Archive the pre-linked object into a single static library.
+          "$NDK_BIN/llvm-ar" rcs libonnxruntime.a prelinked_objects.o
+        working-directory: onnxruntime
+
       - name: Zip the files
         run: |
-          zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
+          zip onnxruntime-android-qnn.zip onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.a onnxruntime/build/android/arm64-v8a/Release/libonnxruntime.so
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
