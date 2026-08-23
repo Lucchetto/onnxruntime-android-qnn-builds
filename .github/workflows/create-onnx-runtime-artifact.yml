@@ -108,7 +108,14 @@ jobs:
           # Relocatable pre-link of all objects into a single object file.
           # Use a response file to avoid hitting ARG_MAX with thousands of .o files.
           find static_libraries/temp -name '*.o' > objects.rsp
-          "$NDK_BIN/ld.lld" -r -o prelinked_objects.o @objects.rsp
+          # The external dependency archives (protobuf, onnx, re2, absl,
+          # flatbuffers, cpuinfo, kleidiai) live under _deps/ and are NOT
+          # extracted above. Pass them to ld -r as archives so the linker
+          # pulls only the referenced members (dead-code pruning) and resolves
+          # symbols like onnx::GraphProto::GraphProto(...) from libonnx_proto.a.
+          # --start-group/--end-group handles circular deps between them.
+          find _deps -name '*.a' > deps.rsp
+          "$NDK_BIN/ld.lld" -r -o prelinked_objects.o @objects.rsp --start-group @deps.rsp --end-group
           # Archive the pre-linked object into a single static library.
           "$NDK_BIN/llvm-ar" rcs libonnxruntime.a prelinked_objects.o
         working-directory: onnxruntime
