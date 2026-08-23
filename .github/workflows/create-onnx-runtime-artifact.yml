@@ -80,7 +80,7 @@ jobs:
         env:
           CCACHE_COMPILERCHECK: content
         run: |
-          python3 tools/ci_build/build.py --skip_submodule_sync --android \
+          python3 tools/ci_build/build.py --build_shared_lib --skip_submodule_sync --android \
             --config Release --parallel --use_qnn static_lib \
             --qnn_home $HOME/qnn_sdk/qairt/${{ env.QNN_SDK_VERSION }}/ \
             --android_sdk_path ${{ env.ANDROID_HOME }} \
