@@ -33,7 +33,7 @@ jobs:
         run: cat config.env >> $GITHUB_ENV
 
       - name: Set up Android SDK ${{ env.ANDROID_SDK_VERSION }}
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install required Android SDK components
         run: |
